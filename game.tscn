@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://s86npj6tmf72"]
+
+[ext_resource type="Script" uid="uid://54ohckujrdgd" path="res://chunk_organizer.gd" id="1_e2o6t"]
+[ext_resource type="Script" uid="uid://n2sn10h62833" path="res://camera_2d.gd" id="3_feb5d"]
+
+[node name="Game" type="Node2D"]
+
+[node name="World" type="Node2D" parent="."]
+script = ExtResource("1_e2o6t")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(0.6, 0.6)
+script = ExtResource("3_feb5d")
