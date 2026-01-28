@@ -11,7 +11,7 @@ var terrain_height_variance : int = 20
 var chunk_polygon : PackedVector2Array 
 func start(_chunk_coords):
 	chunk_polygon = [(Vector2(chunk_coords.x,chunk_coords.y) * chunk_size), (Vector2(chunk_coords.x + 1,chunk_coords.y) * chunk_size), (Vector2(chunk_coords.x + 1,chunk_coords.y + 1) * chunk_size), (Vector2(chunk_coords.x,chunk_coords.y + 1) * chunk_size)]
-	create_chunk_border()
+	
 	if WorldSave.loaded_coords.find(_chunk_coords) == -1 :
 		terrain_generation()
 		WorldSave.add_chunk(chunk_coords)
@@ -22,12 +22,14 @@ func start(_chunk_coords):
 			polygon_instance.polygon = polygon[0]
 			polygon_instance.color = polygon[1]
 			add_child(polygon_instance)
+	
+	create_chunk_border()
 
 func save():
+	chunk_data = []
 	for polygon in get_children():
 		var polygon_polygon = polygon.polygon
 		var polygon_color = polygon.color
-		chunk_data = []
 		chunk_data.append([polygon_polygon,polygon_color])
 	WorldSave.save_chunk(chunk_coords,chunk_data)
 	queue_free()
@@ -41,7 +43,9 @@ func terrain_generation():
 			land_with_terrain_height_variance = true
 	if land_with_terrain_height_variance == false :
 		var land : Polygon2D = Polygon2D.new()
+		var land_material : LandMaterial = preload("uid://b317mc426pgwh")
 		land.polygon = chunk_polygon
+		land.color = land_material.color
 		add_child(land)
 		# Check if chunk is below lowest possible height_variance. If so, generate chunk polygon
 	
@@ -49,18 +53,36 @@ func terrain_generation():
 	var land_polygon_points = []
 	if land_with_terrain_height_variance == true :
 		land_polygon_points.append(Vector2(chunk_coords.x,chunk_coords.y + 1) * chunk_size)
-		
 		for x in range(chunk_coords.x * chunk_size, (chunk_coords.x + 1) * chunk_size + 1,32):
 			var height = round(terrain_noise.get_noise_1d(x) * terrain_height_variance)
 			land_polygon_points.append(Vector2(x,height))
-		
 		land_polygon_points.append(Vector2(chunk_coords.x + 1,chunk_coords.y + 1) * chunk_size)
+		
 		land_polygon.polygon = land_polygon_points
 		
 		for polygon in force_polygon_in_border(land_polygon.polygon) :
 			var polygon_child = Polygon2D.new()
 			polygon_child.polygon = polygon
+			
+			var land_material : LandMaterial = preload("uid://b317mc426pgwh")
+			polygon_child.color = land_material.color
+			
 			add_child(polygon_child)
+			
+	#Sphaggeti cave system, not finished yet. fix later
+	var cave_test : Array[Vector2]
+	for x in range(chunk_coords.x * chunk_size, (chunk_coords.x + 1) * chunk_size + 1,32):
+		for y in range(chunk_coords.y * chunk_size, (chunk_coords.y + 1) * chunk_size + 1,32):
+			var test = terrain_noise.get_noise_2d(x,y)
+			if abs(test) <= 0.05:
+				cave_test.append(Vector2(x,y))
+	if cave_test.size() > 0 :
+		cave_test.append(cave_test[0])
+		var poly = Geometry2D.convex_hull(cave_test)
+		var gon = Polygon2D.new()
+		gon.polygon = poly
+		gon.z_index = 2
+		add_child(gon)
 
 ##Intersect chunk_polygon with polygon_points. Returning resulting polygon(s) points
 func force_polygon_in_border(polygon_points : PackedVector2Array) -> Array[PackedVector2Array]:
@@ -69,9 +91,10 @@ func force_polygon_in_border(polygon_points : PackedVector2Array) -> Array[Packe
 ##Create chunk border and coordinate label, for debug only
 func create_chunk_border():
 	var label : Label = Label.new()
-	label.text = str(chunk_coords)
+	label.text = " " + str(chunk_coords)
 	label.scale = Vector2(1.5,1.5)
 	label.global_position = chunk_coords * chunk_size
+	label.z_index = 2
 	add_child(label,false,Node.INTERNAL_MODE_FRONT)
 	var line : Line2D = Line2D.new()
 	line.width = 2
@@ -80,4 +103,5 @@ func create_chunk_border():
 	line.add_point(Vector2i(chunk_coords.x + 1,chunk_coords.y + 1) * chunk_size)
 	line.add_point(Vector2i(chunk_coords.x,chunk_coords.y + 1) * chunk_size)
 	line.add_point(Vector2i(chunk_coords.x,chunk_coords.y) * chunk_size)
+	line.z_index = 2
 	add_child(line,false,Node.INTERNAL_MODE_FRONT)

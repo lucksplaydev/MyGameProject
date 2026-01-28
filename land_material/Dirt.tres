@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="LandMaterial" load_steps=2 format=3 uid="uid://b317mc426pgwh"]
+
+[ext_resource type="Script" uid="uid://bv1yepkujuamj" path="res://land_material/land_material_template.gd" id="1_oyynv"]
+
+[resource]
+script = ExtResource("1_oyynv")
+color = Color(0.54759485, 0.30763844, 0.10984919, 1)
+metadata/_custom_type_script = "uid://bv1yepkujuamj"
